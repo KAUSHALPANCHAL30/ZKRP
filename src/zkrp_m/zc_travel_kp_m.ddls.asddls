@@ -1,7 +1,7 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Travel Projection view'
 @Metadata.allowExtensions: true
-//@Metadata.ignorePropagatedAnnotations: true
+
 define root view entity ZC_TRAVEL_KP_M
   provider contract transactional_query
   as projection on ZI_TRAVEL_KP_M

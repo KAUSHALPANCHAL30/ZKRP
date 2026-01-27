@@ -47,13 +47,14 @@ annotate view ZC_BOOKING_KP_M with
   @Consumption.valueHelpDefinition: [{
   entity: { name: '/DMO/I_Carrier', element: 'AirlineID' }  }]
   CarrierId;
+  
   @UI.lineItem: [{ position: 50 }]
   @UI.identification: [{ position : 50 }]
   @Consumption.valueHelpDefinition: [{
     entity: { name: '/DMO/I_Flight', element: 'ConnectionID' },
       additionalBinding: [{ element: 'ConnectionId', localElement: 'ConnectionID' },
                       { element: 'AirlineID', localElement: 'CarrierId' },
-                      { element: 'CurrencyCde', localElement: 'CurrencyCode' },
+                      { element: 'CurrencyCode', localElement: 'CurrencyCode' },
                       { element: 'Price', localElement: 'FlightPrice' }  ]  }]
   ConnectionId;
   @UI.lineItem: [{ position: 60 }]
@@ -62,7 +63,7 @@ annotate view ZC_BOOKING_KP_M with
   entity: { name: '/DMO/I_Flight', element: 'FlightDate' },
   additionalBinding: [{ element: 'FlightDate', localElement: 'FlightDate' },
                       { element: 'AirlineID', localElement: 'CarrierId' },
-                      { element: 'CurrencyCde', localElement: 'CurrencyCode' },
+                      { element: 'CurrencyCode', localElement: 'CurrencyCode' },
                       { element: 'Price', localElement: 'FlightPrice' }  ]  }]
   
   FlightDate;

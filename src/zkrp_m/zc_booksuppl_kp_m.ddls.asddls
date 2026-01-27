@@ -1,6 +1,6 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Booking Supplement projection view'
-//@Metadata.ignorePropagatedAnnotations: true
+
 @Metadata.allowExtensions: true
 define view entity ZC_BOOKSUPPL_KP_M
   as projection on ZI_BOOKSUPPL_KP_M

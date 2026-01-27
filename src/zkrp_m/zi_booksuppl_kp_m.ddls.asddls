@@ -1,7 +1,7 @@
 @AbapCatalog.viewEnhancementCategory: [#NONE]
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Booking Supplement View'
-@Metadata.ignorePropagatedAnnotations: true
+
 define view entity ZI_BOOKSUPPL_KP_M
   as select from zkp_booksuppl_m
   association        to parent ZI_BOOKING_KP_M as _Booking        on  $projection.TravelId  = _Booking.TravelId

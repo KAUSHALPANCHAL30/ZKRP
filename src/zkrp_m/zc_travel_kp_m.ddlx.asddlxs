@@ -32,7 +32,7 @@ annotate view ZC_TRAVEL_KP_M with
   TravelId;
 
   @UI.lineItem: [{ position : 20 }]
-  @UI.selectionField: [{ position: 10 }]
+  @UI.selectionField: [{ position: 20 }]
   @UI.identification: [{ position : 20 }]
   @Search.defaultSearchElement: true
   @Consumption.valueHelpDefinition: [{
@@ -40,7 +40,7 @@ annotate view ZC_TRAVEL_KP_M with
   AgencyId;
   //  AgencyName;
   @UI.lineItem: [{ position : 30 }]
-  @UI.selectionField: [{ position: 20 }]
+  @UI.selectionField: [{ position: 30 }]
   @UI.identification: [{ position : 30 }]
   @Search.defaultSearchElement: true
   @Consumption.valueHelpDefinition: [{

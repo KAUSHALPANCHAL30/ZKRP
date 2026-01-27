@@ -1,7 +1,7 @@
 @AbapCatalog.viewEnhancementCategory: [#NONE]
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Travel root entity'
-@Metadata.ignorePropagatedAnnotations: true
+
 define root view entity ZI_TRAVEL_KP_M
   as select from zkp_travel_m
   composition [0..*] of ZI_BOOKING_KP_M          as _Booking

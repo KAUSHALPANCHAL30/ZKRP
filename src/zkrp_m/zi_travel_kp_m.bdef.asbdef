@@ -1,17 +1,19 @@
 managed; // implementation in class zbp_i_travel_kp_m unique;
 strict ( 2 );
 
+
 define behavior for ZI_TRAVEL_KP_M //alias <alias_name>
 implementation in class zcl_bp_travel_kp_m unique
 persistent table zkp_travel_m
 lock master
 authorization master ( instance )
-//etag master <field_name>
+etag master LastChangedAt
+early numbering
 {
-  create ( authorization : global );
+  field ( readonly ) TravelId;
+  create;
   update;
   delete;
-  field ( readonly ) TravelId;
   association _Booking { create; }
   mapping for zkp_travel_m
     {
@@ -30,6 +32,8 @@ authorization master ( instance )
       LastChangedBy = last_changed_by;
       LastChangedAt = last_changed_at;
     }
+
+
 }
 
 define behavior for ZI_BOOKING_KP_M
@@ -37,7 +41,8 @@ implementation in class zcl_bp_booking_kp_m unique
 persistent table zkp_booking_m
 lock dependent by _Travel
 authorization dependent by _Travel
-//etag master <field_name>
+etag master LastChangedAt
+early numbering
 {
   update;
   delete;
@@ -65,7 +70,8 @@ implementation in class zcl_bp_booksuppl_kp_m unique
 persistent table zkp_booksuppl_m
 lock dependent by _Travel
 authorization dependent by _Travel
-//etag master <field_name>
+etag master LastChangedAt
+early numbering
 {
   update;
   delete;

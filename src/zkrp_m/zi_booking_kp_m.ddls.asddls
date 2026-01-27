@@ -1,7 +1,7 @@
 @AbapCatalog.viewEnhancementCategory: [#NONE]
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Booking View'
-@Metadata.ignorePropagatedAnnotations: true
+
 define view entity ZI_BOOKING_KP_M
   as select from zkp_booking_m
 
