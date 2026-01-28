@@ -72,13 +72,46 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
 *      append value #( %cid = ls_entities-%cid
 *                      travelid = lv_curr_num ) to mapped-zi_travel_kp_m.
 
-
-
     ENDLOOP.
 
   ENDMETHOD.
 
   METHOD earlynumbering_cba_booking.
+    DATA : lv_max_booking TYPE /dmo/booking_id.
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    BY \_booking
+    FROM CORRESPONDING #( entities )
+    LINK DATA(lt_link_data).
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_group_entity>) GROUP BY <ls_group_entity>-travelid.
+      lv_max_booking = REDUCE #( INIT lv_max = CONV /dmo/booking_id( '0' )
+                                FOR ls_link IN lt_link_data USING KEY entity
+                                WHERE ( source-travelid = <ls_group_entity>-travelid )
+                                NEXT lv_max = COND /dmo/booking_id( WHEN lv_max < ls_link-target-bookingid
+                                                                    THEN ls_link-target-bookingid
+                                                                    ELSE lv_max ) ).
+
+      lv_max_booking = REDUCE #( INIT lv_max = lv_max_booking
+                                 FOR ls_entity IN entities USING KEY entity
+                                 WHERE ( travelid = <ls_group_entity>-travelid )
+                                 FOR ls_booking IN ls_entity-%target
+                                 NEXT lv_max = COND /dmo/booking_id( WHEN lv_max < ls_booking-bookingid
+                                                                    THEN ls_booking-bookingid
+                                                                    ELSE lv_max ) ).
+
+      LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entities>) USING KEY entity WHERE travelid = <ls_group_entity>-travelid.
+        LOOP AT <ls_entities>-%target ASSIGNING FIELD-SYMBOL(<ls_booking>).
+          IF <ls_booking>-bookingid IS INITIAL.
+            lv_max_booking += 10.
+            APPEND CORRESPONDING #( <ls_booking> ) TO mapped-zi_booking_kp_m ASSIGNING FIELD-SYMBOL(<ls_new_map_book>).
+            <ls_new_map_book>-bookingid = lv_max_booking.
+          ENDIF.
+        ENDLOOP.
+      ENDLOOP.
+    ENDLOOP.
+
   ENDMETHOD.
 
 ENDCLASS.
