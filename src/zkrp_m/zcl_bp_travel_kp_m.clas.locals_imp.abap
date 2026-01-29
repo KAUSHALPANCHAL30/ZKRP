@@ -2,6 +2,17 @@ CLASS lhc_zi_travel_kp_m DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
     METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
       IMPORTING keys REQUEST requested_authorizations FOR zi_travel_kp_m RESULT result.
+    METHODS accepttravel FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_kp_m~accepttravel RESULT result.
+
+    METHODS copytravel FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_kp_m~copytravel.
+
+    METHODS recalctotprice FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_kp_m~recalctotprice.
+
+    METHODS rejecttravel FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_kp_m~rejecttravel RESULT result.
 
 *    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
 *      IMPORTING REQUEST requested_authorizations FOR zi_travel_kp_m RESULT result.
@@ -112,6 +123,18 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
+  ENDMETHOD.
+
+  METHOD acceptTravel.
+  ENDMETHOD.
+
+  METHOD copyTravel.
+  ENDMETHOD.
+
+  METHOD recalcTotPrice.
+  ENDMETHOD.
+
+  METHOD rejectTravel.
   ENDMETHOD.
 
 ENDCLASS.
