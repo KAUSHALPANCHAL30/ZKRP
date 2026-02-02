@@ -125,16 +125,101 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD acceptTravel.
+  METHOD accepttravel.
   ENDMETHOD.
 
-  METHOD copyTravel.
+  METHOD copytravel.
+
+    DATA : it_travel        TYPE TABLE FOR CREATE zi_travel_kp_m,
+           it_booking_cba   TYPE TABLE FOR CREATE zi_travel_kp_m\_booking,
+           it_booksuppl_cba TYPE TABLE FOR CREATE zi_booking_kp_m\_booksuppl.
+
+
+    READ TABLE keys ASSIGNING FIELD-SYMBOL(<ls_wo_cid>) WITH KEY %cid = ''.
+    ASSERT <ls_wo_cid> IS INITIAL.
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel_read)
+    FAILED DATA(lt_failed).
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m BY \_booking
+    ALL FIELDS WITH CORRESPONDING #( lt_travel_read )
+    RESULT DATA(lt_booking_read).
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_booking_kp_m BY \_booksuppl
+    ALL FIELDS WITH CORRESPONDING #( lt_booking_read )
+    RESULT DATA(lt_booksuppl_read).
+
+    LOOP AT lt_travel_read ASSIGNING FIELD-SYMBOL(<ls_travel_read>).
+*      APPEND INITIAL LINE TO it_travel ASSIGNING FIELD-SYMBOL(<ls_travel>).
+*      <ls_travel>-%cid = keys[ KEY entity travelid = <ls_travel_read>-travelid ]-%cid.
+*      <ls_travel>-%data = CORRESPONDING #( <ls_travel_read> EXCEPT travelid ).
+
+      APPEND VALUE #( %cid  = keys[ KEY entity travelid = <ls_travel_read>-travelid ]-%cid
+                      %data = CORRESPONDING #( <ls_travel_read> EXCEPT travelid ) )
+      TO it_travel ASSIGNING FIELD-SYMBOL(<ls_travel>).
+
+      <ls_travel>-begindate = cl_abap_context_info=>get_system_date( ).
+      <ls_travel>-enddate = cl_abap_context_info=>get_system_date( ) + 15.
+      <ls_travel>-overallstatus = 'O'.
+
+      APPEND VALUE #( %cid_ref = <ls_travel>-%cid ) TO it_booking_cba ASSIGNING FIELD-SYMBOL(<it_booking>).
+
+      LOOP AT lt_booking_read ASSIGNING FIELD-SYMBOL(<ls_booking_read>)
+                    USING KEY entity WHERE travelid = <ls_travel_read>-travelid.
+
+        APPEND VALUE #( %cid  = <ls_travel>-%cid && <ls_booking_read>-bookingid
+                        %data = CORRESPONDING #( <ls_booking_read> EXCEPT travelid ) )
+        TO <it_booking>-%target ASSIGNING FIELD-SYMBOL(<ls_booking_new>).
+
+        <ls_booking_new>-bookingstatus = 'N'.
+
+        APPEND VALUE #( %cid_ref = <ls_booking_new>-%cid ) TO it_booksuppl_cba ASSIGNING FIELD-SYMBOL(<it_booksuppl>).
+
+        LOOP AT lt_booksuppl_read ASSIGNING FIELD-SYMBOL(<ls_booksuppl_read>)
+                                  USING KEY entity WHERE travelid  = <ls_travel_read>-travelid
+                                                     AND bookingid = <ls_booking_read>-bookingid.
+
+          APPEND VALUE #( %cid  = <ls_travel>-%cid && <ls_booking_read>-bookingid && <ls_booksuppl_read>-bookingsupplementid
+                          %data = CORRESPONDING #( <ls_booking_read> EXCEPT travelid bookingid ) )
+          TO <it_booksuppl>-%target.
+
+
+
+        ENDLOOP.
+      ENDLOOP.
+    ENDLOOP.
+
+    MODIFY ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    CREATE FIELDS ( agencyid customerid begindate enddate bookingfee totalprice currencycode overallstatus description )
+    WITH it_travel
+
+    ENTITY zi_travel_kp_m
+    CREATE BY \_booking
+    FIELDS ( bookingid bookingdate customerid carrierid connectionid flightdate flightprice currencycode bookingstatus )
+    WITH it_booking_cba
+
+    ENTITY zi_booking_kp_m
+    CREATE BY \_booksuppl
+    FIELDS ( bookingsupplementid supplementid price currencycode )
+    WITH it_booksuppl_cba
+
+    MAPPED DATA(lt_mapped).
+
+    mapped-zi_travel_kp_m = lt_mapped-zi_travel_kp_m.
+
+
   ENDMETHOD.
 
-  METHOD recalcTotPrice.
+  METHOD recalctotprice.
   ENDMETHOD.
 
-  METHOD rejectTravel.
+  METHOD rejecttravel.
   ENDMETHOD.
 
 ENDCLASS.

@@ -25,7 +25,7 @@ annotate view ZC_TRAVEL_KP_M with
       targetElement: '_Booking' }
 
       ]
-
+  @UI.lineItem: [{ type:#FOR_ACTION, dataAction: 'copyTravel', label : 'Copy Travel' }]
   @UI.lineItem: [{ position : 10 }]
   @UI.identification: [{ position : 10 }]
   @Search.defaultSearchElement: true
