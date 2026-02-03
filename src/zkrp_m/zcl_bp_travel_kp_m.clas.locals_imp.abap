@@ -114,9 +114,9 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
 
       LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entities>) USING KEY entity WHERE travelid = <ls_group_entity>-travelid.
         LOOP AT <ls_entities>-%target ASSIGNING FIELD-SYMBOL(<ls_booking>).
+          APPEND CORRESPONDING #( <ls_booking> ) TO mapped-zi_booking_kp_m ASSIGNING FIELD-SYMBOL(<ls_new_map_book>).
           IF <ls_booking>-bookingid IS INITIAL.
             lv_max_booking += 10.
-            APPEND CORRESPONDING #( <ls_booking> ) TO mapped-zi_booking_kp_m ASSIGNING FIELD-SYMBOL(<ls_new_map_book>).
             <ls_new_map_book>-bookingid = lv_max_booking.
           ENDIF.
         ENDLOOP.
@@ -136,7 +136,7 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
 
 
     READ TABLE keys ASSIGNING FIELD-SYMBOL(<ls_wo_cid>) WITH KEY %cid = ''.
-    ASSERT <ls_wo_cid> IS INITIAL.
+    ASSERT <ls_wo_cid> IS NOT ASSIGNED.
 
     READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
     ENTITY zi_travel_kp_m
@@ -185,7 +185,8 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
                                                      AND bookingid = <ls_booking_read>-bookingid.
 
           APPEND VALUE #( %cid  = <ls_travel>-%cid && <ls_booking_read>-bookingid && <ls_booksuppl_read>-bookingsupplementid
-                          %data = CORRESPONDING #( <ls_booking_read> EXCEPT travelid bookingid ) )
+*                          %data = CORRESPONDING #( <ls_booking_read> EXCEPT travelid bookingid ) )
+                          %data = CORRESPONDING #( <ls_booksuppl_read> EXCEPT travelid bookingid ) )
           TO <it_booksuppl>-%target.
 
 

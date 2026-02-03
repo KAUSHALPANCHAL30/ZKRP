@@ -42,8 +42,8 @@ CLASS lhc_zi_booking_kp_m IMPLEMENTATION.
                                   ).
     ENDLOOP.
 
-    LOOP AT entities ASSIGNING FIELD-SYMBOL(<booking>) USING KEY entity WHERE travelid = <booking_group>-travelid
-                                                                         AND bookingid = <booking_group>-bookingid.
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<booking>) USING KEY entity WHERE TravelId = <booking_group>-TravelId
+                                                                          AND BookingId = <booking_group>-BookingId.
 
       LOOP AT <booking>-%target ASSIGNING FIELD-SYMBOL(<booksuppl_wo_numbers>).
 
