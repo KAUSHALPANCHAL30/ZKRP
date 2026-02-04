@@ -125,9 +125,6 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD accepttravel.
-  ENDMETHOD.
-
   METHOD copytravel.
 
     DATA : it_travel        TYPE TABLE FOR CREATE zi_travel_kp_m,
@@ -220,7 +217,39 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
   METHOD recalctotprice.
   ENDMETHOD.
 
+  METHOD accepttravel.
+    MODIFY ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    UPDATE FIELDS ( overallstatus )
+    WITH VALUE #( FOR ls_keys IN keys ( %tky          = ls_keys-%tky
+                                        overallstatus = 'A' ) ).
+*    REPORTED DATA(lt_travel).
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_result).
+
+    result = VALUE #( FOR ls_result IN lt_result ( %tky   = ls_result-%tky
+                                                   %param = ls_result ) ).
+  ENDMETHOD.
+
+
   METHOD rejecttravel.
+    MODIFY ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    UPDATE FIELDS ( overallstatus )
+    WITH VALUE #( FOR ls_keys IN keys ( %tky          = ls_keys-%tky
+                                        overallstatus = 'X' ) ).
+*    REPORTED DATA(lt_travel).
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_result).
+
+    result = VALUE #( FOR ls_result IN lt_result ( %tky   = ls_result-%tky
+                                                   %param = ls_result ) ).
   ENDMETHOD.
 
 ENDCLASS.
