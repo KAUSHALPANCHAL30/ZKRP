@@ -10,17 +10,19 @@ authorization master ( instance )
 etag master LastChangedAt
 early numbering
 {
-  field ( readonly ) TravelId;
-  action acceptTravel result[1] $self;
-  action rejectTravel result[1] $self;
+  field ( readonly ) TravelId, LastChangedAt, LastChangedBy, CreatedAt, CreatedBy;
+  field ( mandatory ) AgencyId, CustomerId, BeginDate, EndDate, OverallStatus, BookingFee, CurrencyCode;
+  action ( features : instance ) acceptTravel result [1] $self;
+  action ( features : instance ) rejectTravel result [1] $self;
 
-  factory action copyTravel[1];
+  factory action copyTravel [1];
 
   internal action recalcTotPrice;
+
   create;
   update;
   delete;
-  association _Booking { create; }
+  association _Booking { create ( features : instance ); }
   mapping for zkp_travel_m
     {
       TravelId      = travel_id;
@@ -52,9 +54,11 @@ early numbering
 {
   update;
   delete;
-  field ( readonly ) TravelId, BookingId;
+  field ( readonly ) TravelId, BookingId, LastChangedAt;
+  field ( mandatory ) CarrierId, ConnectionId, FlightDate, BookingStatus;
+  field ( mandatory : create, readonly : update ) BookingDate, CustomerId;
   association _Travel;
-  association _BookSuppl { create; }
+  association _BookSuppl { create ( features : instance ); }
   mapping for zkp_booking_m
     {
       TravelId      = travel_id;
@@ -81,7 +85,8 @@ early numbering
 {
   update;
   delete;
-  field ( readonly ) TravelId, BookingId, BookingSupplementId;
+  field ( readonly ) TravelId, BookingId, BookingSupplementId, LastChangedAt;
+  field ( mandatory ) Price, SupplementId;
   association _Travel;
   association _Booking;
   mapping for zkp_booksuppl_m

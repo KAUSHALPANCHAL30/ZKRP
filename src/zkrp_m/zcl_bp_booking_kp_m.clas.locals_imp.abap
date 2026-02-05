@@ -5,6 +5,9 @@ CLASS lhc_zi_booking_kp_m DEFINITION INHERITING FROM cl_abap_behavior_handler.
     METHODS earlynumbering_cba_bookingsupp FOR NUMBERING
       IMPORTING entities FOR CREATE zi_booking_kp_m\_booksuppl.
 
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR zi_booking_kp_m RESULT result.
+
 ENDCLASS.
 
 CLASS lhc_zi_booking_kp_m IMPLEMENTATION.
@@ -14,7 +17,7 @@ CLASS lhc_zi_booking_kp_m IMPLEMENTATION.
 
     READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
     ENTITY zi_booking_kp_m
-    BY \_BookSuppl
+    BY \_booksuppl
     FROM CORRESPONDING #( entities )
     LINK DATA(booking_supplements).
 
@@ -42,8 +45,8 @@ CLASS lhc_zi_booking_kp_m IMPLEMENTATION.
                                   ).
     ENDLOOP.
 
-    LOOP AT entities ASSIGNING FIELD-SYMBOL(<booking>) USING KEY entity WHERE TravelId = <booking_group>-TravelId
-                                                                          AND BookingId = <booking_group>-BookingId.
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<booking>) USING KEY entity WHERE travelid = <booking_group>-travelid
+                                                                          AND bookingid = <booking_group>-bookingid.
 
       LOOP AT <booking>-%target ASSIGNING FIELD-SYMBOL(<booksuppl_wo_numbers>).
 
@@ -61,6 +64,23 @@ CLASS lhc_zi_booking_kp_m IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD get_instance_features.
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m BY \_booking
+    FIELDS ( travelid bookingstatus )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_booking).
+
+    result = VALUE #( FOR ls_booking IN lt_booking
+                      ( %tky = ls_booking-%tky
+
+                        %features-%assoc-_booksuppl =   COND #( WHEN ls_booking-bookingstatus = 'X'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+
+                      ) ).
+  ENDMETHOD.
 
 ENDCLASS.
 

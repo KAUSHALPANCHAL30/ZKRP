@@ -13,6 +13,8 @@ CLASS lhc_zi_travel_kp_m DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS rejecttravel FOR MODIFY
       IMPORTING keys FOR ACTION zi_travel_kp_m~rejecttravel RESULT result.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR zi_travel_kp_m RESULT result.
 
 *    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
 *      IMPORTING REQUEST requested_authorizations FOR zi_travel_kp_m RESULT result.
@@ -251,5 +253,65 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
     result = VALUE #( FOR ls_result IN lt_result ( %tky   = ls_result-%tky
                                                    %param = ls_result ) ).
   ENDMETHOD.
+
+  METHOD get_instance_features.
+
+    READ ENTITIES OF zi_travel_kp_m IN LOCAL MODE
+    ENTITY zi_travel_kp_m
+    FIELDS ( travelid overallstatus )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    result = VALUE #( FOR ls_travel IN lt_travel
+                      ( %tky = ls_travel-%tky
+                        %features-%action-accepttravel = COND #( WHEN ls_travel-overallstatus = 'A'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+
+                        %features-%action-rejecttravel = COND #( WHEN ls_travel-overallstatus = 'X'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+
+                        %features-%assoc-_booking =   COND #( WHEN ls_travel-overallstatus = 'X'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+
+                      ) ).
+
+  ENDMETHOD.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ENDCLASS.
