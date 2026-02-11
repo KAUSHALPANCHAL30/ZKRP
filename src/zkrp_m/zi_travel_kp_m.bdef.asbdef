@@ -22,6 +22,8 @@ early numbering
   validation validateStatus on save { create; field OverallStatus; }
   validation validateDates on save { create; field BeginDate, EndDate; }
 
+  determination calculateTotalPrice on modify { create; field BookingFee, CurrencyCode; }
+
   create;
   update;
   delete;
@@ -62,6 +64,9 @@ early numbering
   field ( mandatory : create, readonly : update ) BookingDate, CustomerId;
   association _Travel;
   association _BookSuppl { create ( features : instance ); }
+
+  determination calculateTotalPrice on modify { create; field FlightPrice, CurrencyCode; }
+
   mapping for zkp_booking_m
     {
       TravelId      = travel_id;
@@ -92,6 +97,9 @@ early numbering
   field ( mandatory ) Price, SupplementId;
   association _Travel;
   association _Booking;
+
+  determination calculateTotalPrice on modify { create; field Price, CurrencyCode; }
+
   mapping for zkp_booksuppl_m
     {
       TravelId            = travel_id;
