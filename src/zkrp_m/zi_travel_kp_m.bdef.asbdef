@@ -1,4 +1,4 @@
-managed; // implementation in class zbp_i_travel_kp_m unique;
+managed implementation in class zcl_bp_travel_kp_m unique; // implementation in class zbp_i_travel_kp_m unique;
 strict ( 2 );
 
 
@@ -6,6 +6,7 @@ define behavior for ZI_TRAVEL_KP_M //alias <alias_name>
 implementation in class zcl_bp_travel_kp_m unique
 persistent table zkp_travel_m
 lock master
+with additional save
 authorization master ( instance )
 etag master LastChangedAt
 early numbering
@@ -18,6 +19,7 @@ early numbering
   factory action copyTravel [1];
 
   internal action recalcTotPrice;
+
   validation validateCustomer on save { create; field CustomerId; }
   validation validateStatus on save { create; field OverallStatus; }
   validation validateDates on save { create; field BeginDate, EndDate; }

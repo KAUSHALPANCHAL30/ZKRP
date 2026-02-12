@@ -1,7 +1,129 @@
+CLASS lsc_zi_travel_kp_m DEFINITION INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+
+    METHODS save_modified REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_zi_travel_kp_m IMPLEMENTATION.
+
+  METHOD save_modified.
+    DATA : lt_travel_log   TYPE STANDARD TABLE OF zkp_travel_log.
+    DATA : lt_travel_log_c TYPE STANDARD TABLE OF zkp_travel_log.
+
+    IF create-zi_travel_kp_m IS NOT INITIAL.
+      lt_travel_log = CORRESPONDING #( create-zi_travel_kp_m ).
+
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_travel_log>).
+        <ls_travel_log>-changing_operation = 'CREATE'.
+        GET TIME STAMP FIELD <ls_travel_log>-created_at.
+
+        READ TABLE create-zi_travel_kp_m ASSIGNING FIELD-SYMBOL(<ls_travel>)
+        WITH TABLE KEY entity
+        COMPONENTS TravelId = <ls_travel_log>-travelid.
+        IF sy-subrc = 0.
+
+          IF <ls_travel>-%control-BookingFee = cl_abap_behv=>flag_changed.
+            <ls_travel_log>-changed_field_name = 'Booking Fee'.
+            <ls_travel_log>-changed_value = <ls_travel>-BookingFee.
+            TRY.
+                <ls_travel_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+
+            APPEND <ls_travel_log> TO lt_travel_log_c.
+          ENDIF.
+
+          IF <ls_travel>-%control-OverallStatus = cl_abap_behv=>flag_changed.
+            <ls_travel_log>-changed_field_name = 'Overall Status'.
+            <ls_travel_log>-changed_value = <ls_travel>-OverallStatus.
+            TRY.
+                <ls_travel_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+
+            APPEND <ls_travel_log> TO lt_travel_log_c.
+          ENDIF.
+        ENDIF.
+
+      ENDLOOP.
+
+      INSERT zkp_travel_log FROM TABLE @lt_travel_log_c.
+
+    ENDIF.
+
+    IF update-zi_travel_kp_m IS NOT INITIAL.
+      CLEAR : lt_travel_log_c.
+      lt_travel_log = CORRESPONDING #( update-zi_travel_kp_m ).
+
+      LOOP AT update-zi_travel_kp_m ASSIGNING FIELD-SYMBOL(<ls_log_update>).
+        ASSIGN lt_travel_log[ travelid = <ls_log_update>-TravelId ] TO FIELD-SYMBOL(<ls_log_u>).
+
+        <ls_log_u>-changing_operation = 'UPDATE'.
+        GET TIME STAMP FIELD <ls_log_u>-created_at.
+
+        IF <ls_log_update>-%control-CustomerId = if_abap_behv=>mk-on.
+          <ls_log_u>-changed_field_name = 'Customer Id'.
+          <ls_log_u>-changed_value = <ls_log_update>-CustomerId.
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH cx_uuid_error.
+              "handle exception
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_travel_log_c.
+        ENDIF.
+
+        IF <ls_log_update>-%control-Description = if_abap_behv=>mk-on.
+          <ls_log_u>-changed_field_name = 'Description'.
+          <ls_log_u>-changed_value = <ls_log_update>-Description.
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH cx_uuid_error.
+              "handle exception
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_travel_log_c.
+        ENDIF.
+
+
+      ENDLOOP.
+
+      INSERT zkp_travel_log FROM TABLE @lt_travel_log_c.
+    ENDIF.
+
+
+    IF delete-zi_travel_kp_m IS NOT INITIAL.
+      CLEAR : lt_travel_log.
+      lt_travel_log = CORRESPONDING #( delete-zi_travel_kp_m ).
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_log_del>).
+        <ls_log_del>-changing_operation = 'DELETE'.
+        GET TIME STAMP FIELD <ls_log_del>-created_at.
+        TRY.
+            <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          CATCH cx_uuid_error.
+            "handle exception
+        ENDTRY.
+      ENDLOOP.
+
+      INSERT zkp_travel_log FROM TABLE @lt_travel_log.
+
+    ENDIF.
+
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lhc_zi_travel_kp_m DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
+
     METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
       IMPORTING keys REQUEST requested_authorizations FOR zi_travel_kp_m RESULT result.
+
     METHODS accepttravel FOR MODIFY
       IMPORTING keys FOR ACTION zi_travel_kp_m~accepttravel RESULT result.
 
@@ -13,19 +135,21 @@ CLASS lhc_zi_travel_kp_m DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS rejecttravel FOR MODIFY
       IMPORTING keys FOR ACTION zi_travel_kp_m~rejecttravel RESULT result.
+
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR zi_travel_kp_m RESULT result.
+
     METHODS validatecustomer FOR VALIDATE ON SAVE
       IMPORTING keys FOR zi_travel_kp_m~validatecustomer.
+
     METHODS validatedates FOR VALIDATE ON SAVE
       IMPORTING keys FOR zi_travel_kp_m~validatedates.
+
     METHODS validatestatus FOR VALIDATE ON SAVE
       IMPORTING keys FOR zi_travel_kp_m~validatestatus.
+
     METHODS calculatetotalprice FOR DETERMINE ON MODIFY
       IMPORTING keys FOR zi_travel_kp_m~calculatetotalprice.
-
-*    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
-*      IMPORTING REQUEST requested_authorizations FOR zi_travel_kp_m RESULT result.
 
     METHODS earlynumbering_cba_booking FOR NUMBERING
       IMPORTING entities FOR CREATE zi_travel_kp_m\_booking.
@@ -40,11 +164,6 @@ CLASS lhc_zi_travel_kp_m IMPLEMENTATION.
   METHOD get_instance_authorizations.
 
   ENDMETHOD.
-
-*  METHOD get_global_authorizations.
-*
-*    result-%create = if_abap_behv=>auth-allowed.
-*  ENDMETHOD.
 
   METHOD earlynumbering_create.
     DATA(lt_entities) = entities.
