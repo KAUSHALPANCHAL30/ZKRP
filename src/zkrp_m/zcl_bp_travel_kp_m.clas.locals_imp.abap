@@ -52,6 +52,51 @@ CLASS lsc_zi_travel_kp_m IMPLEMENTATION.
       ENDLOOP.
 
       INSERT zkp_travel_log FROM TABLE @lt_travel_log_c.
+**********************************************************************
+*Unamanged Save
+**********************************************************************
+      DATA : lt_book_suppl TYPE STANDARD TABLE OF zkp_booksuppl_m.
+
+      IF create-zi_booksuppl_kp_m IS NOT INITIAL.
+        lt_book_suppl = VALUE #( FOR ls_booksup IN create-zi_booksuppl_kp_m (
+                                      travel_id = ls_booksup-TravelId
+                                      booking_id = ls_booksup-bookingid
+                                      booking_supplement_id = ls_booksup-bookingsupplementid
+                                      supplement_id = ls_booksup-supplementid
+                                      price = ls_booksup-price
+                                      currency_code = ls_booksup-currencycode
+                                      last_changed_At = ls_booksup-lastchangedat )  ).
+
+        INSERT  zkp_booksuppl_m FROM TABLE @lt_book_suppl.
+
+      ENDIF.
+
+      IF update-zi_booksuppl_kp_m IS NOT INITIAL.
+
+        lt_book_suppl = VALUE #( FOR ls_booksup IN update-zi_booksuppl_kp_m (
+                              travel_id = ls_booksup-TravelId
+                              booking_id = ls_booksup-bookingid
+                              booking_supplement_id = ls_booksup-bookingsupplementid
+                              supplement_id = ls_booksup-supplementid
+                              price = ls_booksup-price
+                              currency_code = ls_booksup-currencycode
+                              last_changed_At = ls_booksup-lastchangedat )  ).
+
+        UPDATE zkp_booksuppl_m FROM TABLE @lt_book_suppl.
+
+      ENDIF.
+
+      IF delete-zi_booksuppl_kp_m IS NOT INITIAL.
+
+        lt_book_suppl = VALUE #( FOR ls_del IN delete-zi_booksuppl_kp_m (
+                              travel_id = ls_del-TravelId
+                              booking_id = ls_del-bookingid
+                              booking_supplement_id = ls_del-bookingsupplementid )  ).
+        DELETE zkp_booksuppl_m FROM TABLE @lt_book_suppl.
+      ENDIF.
+
+
+
 
     ENDIF.
 

@@ -87,7 +87,8 @@ early numbering
 
 define behavior for ZI_BOOKSUPPL_KP_M //alias <alias_name>
 implementation in class zcl_bp_booksuppl_kp_m unique
-persistent table zkp_booksuppl_m
+//persistent table zkp_booksuppl_m
+with unmanaged save with full data
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt

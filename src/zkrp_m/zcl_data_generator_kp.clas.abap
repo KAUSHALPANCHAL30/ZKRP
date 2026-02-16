@@ -11,7 +11,9 @@ ENDCLASS.
 
 
 
-CLASS zcl_data_generator_kp IMPLEMENTATION.
+CLASS ZCL_DATA_GENERATOR_KP IMPLEMENTATION.
+
+
   METHOD if_oo_adt_classrun~main.
     DATA : ls_wa  TYPE /dmo/oall_stat_t,
            ls_wa1 TYPE /dmo/oall_stat,
