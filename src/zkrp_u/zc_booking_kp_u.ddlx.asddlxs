@@ -1,0 +1,68 @@
+@Metadata.layer: #CORE
+@Search.searchable: true
+@UI.headerInfo: {
+    typeName: 'Booking',
+    typeNamePlural: 'Bookings',
+    title: {
+        type: #STANDARD,
+        label: 'Booking',
+        value: 'BookingId' } }
+        
+annotate view ZC_BOOKING_KP_U
+    with 
+{
+      @UI.facet: [
+       { id: 'Booking',
+         purpose: #STANDARD,
+         position: 10,
+         label: 'Booking',
+         type: #IDENTIFICATION_REFERENCE } ]
+         
+     
+  @Search.defaultSearchElement: true    
+  TravelID;
+  @UI.lineItem: [{ position: 10 }]
+  @UI.identification: [{ position : 10 }]
+  
+  BookingId;
+  @UI.lineItem: [{ position: 20 }]
+  @UI.identification: [{ position : 20 }]
+  BookingDate;
+  
+  @UI.lineItem: [{ position: 30 }]
+  @UI.identification: [{ position : 30 }]
+  CustomerId;
+  
+  @UI.lineItem: [{ position: 40 }]
+  @UI.identification: [{ position : 40 }]
+  CarrierId;
+  
+  @UI.lineItem: [{ position: 50 }]
+  @UI.identification: [{ position : 50 }]
+  @Consumption.valueHelpDefinition: [{
+    entity: { name: '/DMO/I_Flight', element: 'ConnectionID' },
+      additionalBinding: [{ element: 'ConnectionId', localElement: 'ConnectionID' },
+                      { element: 'AirlineID', localElement: 'CarrierId' },
+                      { element: 'CurrencyCode', localElement: 'CurrencyCode' },
+                      { element: 'Price', localElement: 'FlightPrice' }  ]  }]
+  ConnectionId;
+  
+  @UI.lineItem: [{ position: 60 }]
+  @UI.identification: [{ position : 60 }]
+  @Consumption.valueHelpDefinition: [{
+  entity: { name: '/DMO/I_Flight', element: 'FlightDate' },
+  additionalBinding: [{ element: 'FlightDate', localElement: 'FlightDate' },
+                      { element: 'AirlineID', localElement: 'CarrierId' },
+                      { element: 'CurrencyCode', localElement: 'CurrencyCode' },
+                      { element: 'Price', localElement: 'FlightPrice' }  ]  }]
+  
+  FlightDate;
+  @UI.lineItem: [{ position: 70 }]
+  @UI.identification: [{ position : 70 }]
+  FlightPrice;
+  @Consumption.valueHelpDefinition: [{
+     entity: { name: 'I_Currency', element: 'Currency' }  }]
+  CurrencyCode;
+  
+    
+}
