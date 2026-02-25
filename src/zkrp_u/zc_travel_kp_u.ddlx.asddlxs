@@ -73,7 +73,11 @@ annotate view ZC_TRAVEL_KP_U with
   @UI.lineItem: [{ position : 100 }]
   @UI.identification: [{ position : 100 }]
   @UI.selectionField: [{ position: 30 }]
-  OverallStatus;
+  @UI.textArrangement: #TEXT_ONLY
+  @Search.defaultSearchElement: true
+  @Consumption.valueHelpDefinition: [{
+    entity: { name: '/DMO/I_Overall_Status_VH', element: 'OverallStatus' }  }]
+   OverallStatus;
 
   //    LastChangedAt;
   /* Associations */
