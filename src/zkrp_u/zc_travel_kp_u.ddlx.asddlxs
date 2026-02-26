@@ -72,7 +72,7 @@ annotate view ZC_TRAVEL_KP_U with
 
   @UI.lineItem: [{ position : 100 }]
   @UI.identification: [{ position : 100 }]
-  @UI.selectionField: [{ position: 30 }]
+  @UI.selectionField: [{ position: 40 }]
   @UI.textArrangement: #TEXT_ONLY
   @Search.defaultSearchElement: true
   @Consumption.valueHelpDefinition: [{
