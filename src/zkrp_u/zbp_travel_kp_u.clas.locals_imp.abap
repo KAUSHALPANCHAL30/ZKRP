@@ -33,7 +33,8 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS map_messages
       IMPORTING
-        cid          TYPE abp_behv_cid
+        cid          TYPE abp_behv_cid   OPTIONAL
+        travel_id    TYPE /dmo/travel_id OPTIONAL
         messages     TYPE /dmo/t_message
       EXPORTING
         failed_added TYPE abap_boolean
@@ -97,15 +98,111 @@ CLASS lhc_Travel IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD update.
+    DATA : ls_travel_in TYPE /dmo/travel,
+           ls_travelx   TYPE /dmo/s_travel_inx,
+           lt_messages  TYPE /dmo/t_message.
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<travel_update>).
+
+      ls_travel_in = CORRESPONDING #( <travel_update> MAPPING FROM ENTITY ).
+
+      ls_travelx-travel_id = <travel_update>-TravelID.
+      ls_travelx-_intx = CORRESPONDING #( <travel_update> MAPPING FROM ENTITY ).
+
+      CALL FUNCTION '/DMO/FLIGHT_TRAVEL_UPDATE'
+        EXPORTING
+          is_travel   = CORRESPONDING /dmo/s_travel_in( ls_travel_in )
+          is_travelx  = ls_travelx
+        IMPORTING
+          et_messages = lt_messages.
+
+
+      map_messages(
+       EXPORTING
+       cid       = <travel_update>-%cid_ref
+       travel_id = <travel_update>-TravelID
+       messages  = lt_messages
+       CHANGING
+       failed   = failed-travel
+       reported = reported-travel
+       ).
+
+    ENDLOOP.
+
+
   ENDMETHOD.
 
   METHOD delete.
   ENDMETHOD.
 
   METHOD read.
+    DATA : ls_travel_out TYPE /dmo/travel,
+           lt_messages   TYPE /dmo/t_message.
+
+    LOOP AT keys ASSIGNING FIELD-SYMBOL(<ls_keys>) GROUP BY <ls_keys>-%tky.
+
+      CALL FUNCTION '/DMO/FLIGHT_TRAVEL_READ'
+        EXPORTING
+          iv_travel_id = <ls_keys>-TravelID
+        IMPORTING
+          es_travel    = ls_travel_out
+          et_messages  = lt_messages.
+
+
+      map_messages(
+       EXPORTING
+       travel_id = <ls_keys>-TravelID
+       messages  = lt_messages
+       IMPORTING
+       failed_added = DATA(failed_added)
+       CHANGING
+       failed   = failed-travel
+       reported = reported-travel
+       ).
+
+      IF failed_added = abap_false.
+        INSERT CORRESPONDING #( ls_travel_out MAPPING TO ENTITY ) INTO TABLE result.
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD lock.
+
+    TRY.
+        DATA(lr_lock) = cl_abap_lock_object_factory=>get_instance( iv_name = '/DMO/ETRAVEL' ).
+      CATCH cx_abap_lock_failure INTO DATA(lo_lock_fail).
+
+        RAISE SHORTDUMP lo_lock_fail.
+    ENDTRY.
+
+    LOOP AT keys ASSIGNING FIELD-SYMBOL(<ls_keys>).
+      TRY.
+          lr_lock->enqueue(
+          it_parameter  = VALUE #( ( name = 'TRAVEL_ID' value = REF #( <ls_keys>-travelid ) ) )
+          ).
+
+        CATCH cx_abap_foreign_lock INTO DATA(lr_fo_lock).
+        CATCH cx_abap_lock_failure INTO lo_lock_fail.
+          map_messages(
+            EXPORTING
+              travel_id    = <ls_keys>-TravelID
+              messages     = VALUE #( ( msgid = '/DMO/CM_FLIGHT_LEGAC'
+                                        msgty = 'E'
+                                        msgno = '032'
+                                        msgv1 = <ls_keys>-TravelID
+                                        msgv2 = lr_fo_lock->user_name ) )
+            CHANGING
+              failed       = failed-travel
+              reported     = reported-travel
+          ).
+
+          "handle exception
+      ENDTRY.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD rba_Booking.
@@ -121,6 +218,7 @@ CLASS lhc_Travel IMPLEMENTATION.
     LOOP AT messages INTO DATA(ls_msg).
       IF ls_msg-msgty = 'E' OR ls_msg-msgty = 'A'.
         APPEND VALUE #(  %cid = cid
+                         travelid = travel_id
                          %fail-cause = zcl_travel_aux_kp_u=>get_cause_from_message(
                                                             msgid  = ls_msg-msgid
                                                             msgno  = ls_msg-msgno
@@ -133,6 +231,7 @@ CLASS lhc_Travel IMPLEMENTATION.
       ENDIF.
 
       reported = VALUE #( ( %cid = cid
+                            travelid = travel_id
                             %msg = new_message(
                                      id       = ls_msg-msgid
                                      number   = ls_msg-msgno
