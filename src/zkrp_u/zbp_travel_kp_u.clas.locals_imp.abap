@@ -42,11 +42,39 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
         failed       TYPE tt_failed
         reported     TYPE tt_reported.
 
+    TYPES : tt_booking_failed   TYPE TABLE FOR FAILED  zi_booking_kp_u,
+            tt_booking_reported TYPE TABLE FOR REPORTED zi_booking_kp_u.
+
+    METHODS map_messages_assoc_to_booking
+      IMPORTING
+        cid          TYPE string
+        is_dependend TYPE abap_bool DEFAULT abap_false
+        messages     TYPE /dmo/t_message
+      EXPORTING
+        failed_added TYPE abap_boolean
+      CHANGING
+        failed       TYPE tt_booking_failed
+        reported     TYPE tt_booking_reported.
+
 ENDCLASS.
 
 CLASS lhc_Travel IMPLEMENTATION.
 
   METHOD get_instance_features.
+
+    READ ENTITIES OF zi_travel_kp_u IN LOCAL MODE
+    ENTITY Travel
+    FIELDS ( TravelId OverallStatus )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(travel_read_results)
+    FAILED failed.
+
+    result = VALUE #( FOR travel_read_result IN travel_read_results (
+                                          %tky = travel_read_result-%tky
+                                          %assoc-_Booking = COND #( WHEN travel_read_result-OverallStatus = 'B' OR travel_read_result-OverallStatus = 'X'
+                                                                    THEN if_abap_behv=>fc-o-disabled ELSE if_abap_behv=>fc-o-enabled ) ) ).
+
+
   ENDMETHOD.
 
   METHOD get_global_authorizations.
@@ -92,9 +120,6 @@ CLASS lhc_Travel IMPLEMENTATION.
 
     ENDLOOP.
 
-
-
-
   ENDMETHOD.
 
   METHOD update.
@@ -133,6 +158,29 @@ CLASS lhc_Travel IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD delete.
+    DATA : lt_messages  TYPE /dmo/t_message.
+
+    LOOP AT keys ASSIGNING FIELD-SYMBOL(<ls_keys>).
+
+      CALL FUNCTION '/DMO/FLIGHT_TRAVEL_DELETE'
+        EXPORTING
+          iv_travel_id = <ls_keys>-TravelID
+        IMPORTING
+          et_messages  = lt_messages.
+
+
+      map_messages(
+       EXPORTING
+       cid       = <ls_keys>-%cid_ref
+       travel_id = <ls_keys>-TravelID
+       messages  = lt_messages
+       CHANGING
+       failed   = failed-travel
+       reported = reported-travel
+       ).
+
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD read.
@@ -209,6 +257,87 @@ CLASS lhc_Travel IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD cba_Booking.
+    DATA : booking_old     TYPE /dmo/t_booking,
+           booking         TYPE /dmo/booking,
+           last_booking_id TYPE /dmo/booking_id VALUE '0',
+           messages        TYPE /dmo/t_message.
+
+
+    LOOP AT entities_cba ASSIGNING FIELD-SYMBOL(<travel>).
+
+      DATA(travelid) = <travel>-TravelID.
+
+      CALL FUNCTION '/DMO/FLIGHT_TRAVEL_READ'
+        EXPORTING
+          iv_travel_id = travelid
+        IMPORTING
+          et_booking   = booking_old
+          et_messages  = messages.
+
+      map_messages(
+        EXPORTING
+          cid          = <travel>-%cid_ref
+          travel_id    = <travel>-TravelID
+          messages     = messages
+        IMPORTING
+        failed_added   = DATA(failed_added)
+        CHANGING
+          failed       = failed-travel
+          reported     = reported-travel
+      ).
+
+      IF failed_added EQ abap_true.
+        LOOP AT <travel>-%target ASSIGNING FIELD-SYMBOL(<booking>).
+          map_messages_assoc_to_booking(
+          EXPORTING
+            cid          = <booking>-%cid
+            is_dependend = abap_true
+            messages     = messages
+          CHANGING
+            failed       = failed-booking
+            reported     = reported-booking ).
+        ENDLOOP.
+      ELSE.
+        last_booking_id = VALUE #( booking_old[ lines( booking_old ) ]-booking_id OPTIONAL ).
+
+        LOOP AT <travel>-%target ASSIGNING FIELD-SYMBOL(<booking_create>).
+
+          booking = CORRESPONDING #(  <booking_create> MAPPING FROM ENTITY USING CONTROL ).
+
+          last_booking_id += 1.
+          booking-booking_id = last_booking_id.
+
+          CALL FUNCTION '/DMO/FLIGHT_TRAVEL_UPDATE'
+            EXPORTING
+              is_travel   = VALUE /dmo/s_travel_in( travel_id = travelid )
+              is_travelx  = VALUE /dmo/s_travel_inx( travel_id = travelid )
+              it_booking  = VALUE /dmo/t_booking_in( ( CORRESPONDING #( booking ) ) )
+              it_bookingx = VALUE /dmo/t_booking_inx(
+                                            ( booking_id = booking-booking_id
+                                              action_code = /dmo/if_flight_legacy=>action_code-create ) )
+            IMPORTING
+              et_messages = messages.
+
+          map_messages_assoc_to_booking(
+            EXPORTING
+              cid          = <booking_create>-%cid
+              messages     = messages
+            IMPORTING
+              failed_added = failed_added
+            CHANGING
+              failed       = failed-booking
+              reported     = reported-booking ).
+*
+          IF failed_added = abap_false.
+            INSERT VALUE #( %cid = <booking_create>-%cid
+                            travelid = travelid
+                            bookingid = booking-booking_id ) INTO TABLE mapped-booking.
+          ENDIF.
+        ENDLOOP.
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -245,6 +374,37 @@ CLASS lhc_Travel IMPLEMENTATION.
 
     ENDLOOP.
 
+  ENDMETHOD.
+
+  METHOD map_messages_assoc_to_booking.
+    ASSERT cid IS NOT INITIAL.
+    failed_added = abap_false.
+
+    LOOP AT messages INTO DATA(ls_msg).
+      IF ls_msg-msgty = 'E' OR ls_msg-msgty = 'A'.
+        APPEND VALUE #(  %cid = cid
+                         %fail-cause = /dmo/cl_travel_auxiliary=>get_cause_from_message(
+                                                            msgid  = ls_msg-msgid
+                                                            msgno  = ls_msg-msgno
+                                                            is_dependend = is_dependend
+                                       )
+        ) TO failed.
+
+        failed_added = abap_true.
+
+      ENDIF.
+
+      APPEND VALUE #( %cid = cid
+                      %msg = new_message(
+                                     id       = ls_msg-msgid
+                                     number   = ls_msg-msgno
+                                     severity = if_abap_behv_message=>severity-error
+                                     v1       = ls_msg-msgv1
+                                     v2       = ls_msg-msgv2
+                                     v3       = ls_msg-msgv3
+                                     v4       = ls_msg-msgv4 ) ) TO reported.
+
+    ENDLOOP.
   ENDMETHOD.
 
 ENDCLASS.
