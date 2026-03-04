@@ -14,8 +14,8 @@ use etag
 define behavior for ZC_BOOKING_KP_U alias Booking
 use etag
 {
-  //  use update;
-  //  use delete;
+    use update;
+    use delete;
 
   use association _Travel;
 }

@@ -31,10 +31,14 @@ annotate view ZC_BOOKING_KP_U
   
   @UI.lineItem: [{ position: 30 }]
   @UI.identification: [{ position : 30 }]
+    @Consumption.valueHelpDefinition: [{
+  entity: { name: '/DMO/I_Customer', element: 'CustomerID' }  }]
   CustomerId;
   
   @UI.lineItem: [{ position: 40 }]
   @UI.identification: [{ position : 40 }]
+    @Consumption.valueHelpDefinition: [{
+  entity: { name: '/DMO/I_Carrier', element: 'AirlineID' }  }]
   CarrierId;
   
   @UI.lineItem: [{ position: 50 }]
