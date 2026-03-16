@@ -1,0 +1,91 @@
+managed;// implementation in class zbp_kp_travel_d unique;
+strict ( 2 );
+
+define behavior for ZKP_TRAVEL_D //alias <alias_name>
+implementation in class zbp_travel_kp_d unique
+persistent table /dmo/a_travel_d
+lock master
+authorization master ( instance, global )
+//etag master <field_name>
+{
+  //  create ( precheck, authorization : global );
+  create ( precheck );
+  update ( precheck );
+  delete;
+  field ( numbering : managed, readonly ) TravelUUID;
+  association _Booking { create ( authorization : update ); }
+  mapping for /dmo/a_travel_d
+    {
+      TravelUUID         = travel_uuid;
+      TravelID           = travel_id;
+      AgencyID           = agency_id;
+      BeginDate          = begin_date;
+      CustomerID         = customer_id;
+      EndDate            = end_date;
+      BookingFee         = booking_fee;
+      TotalPrice         = total_price;
+      CurrencyCode       = currency_code;
+      Description        = description;
+      OverallStatus      = overall_status;
+      LocalCreatedBy     = local_created_by;
+      LocalCreatedAt     = local_created_at;
+      LocalLastChangedBy = local_last_changed_by;
+      LocalLastChangedAt = local_last_changed_at;
+      LastChangedAt      = last_changed_at;
+    }
+}
+
+define behavior for ZKP_BOOKING_D //alias <alias_name>
+persistent table /dmo/a_booking_d
+lock dependent by _Travel
+authorization dependent by _Travel
+//etag master <field_name>
+{
+  update;
+  delete;
+  field ( numbering : managed, readonly ) BookingUUID;
+  field ( readonly ) TravelUUID;
+  association _Travel;
+  association _BookingSupplement { create ( authorization : update ); }
+  mapping for /dmo/a_booking_d
+    {
+      BookingUUID        = booking_uuid;
+      TravelUUID         = parent_uuid;
+      BookingID          = booking_id;
+      BookingDate        = booking_date;
+      CustomerID         = customer_id;
+      AirlineID          = carrier_id;
+      ConnectionID       = connection_id;
+      FlightDate         = flight_date;
+      FlightPrice        = flight_price;
+      CurrencyCode       = currency_code;
+      BookingStatus      = booking_status;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+}
+
+define behavior for ZKP_BOOKSUPPL_D //alias <alias_name>
+persistent table /dmo/a_bksuppl_d
+lock dependent by _Travel
+authorization dependent by _Travel
+//etag master <field_name>
+{
+  update;
+  delete;
+  field ( numbering : managed, readonly ) BookSupplUUID;
+  field ( readonly ) BookingUUID;
+  field ( readonly ) TravelUUID;
+  association _Travel;
+  association _Booking;
+  mapping for /dmo/a_bksuppl_d
+    {
+      BookSupplUUID       = booksuppl_uuid;
+      TravelUUID          = root_uuid;
+      BookingUUID         = parent_uuid;
+      BookingSupplementID = booking_supplement_id;
+      SupplementID        = supplement_id;
+      BookSupplPrice      = price;
+      CurrencyCode        = currency_code;
+      LocalLastChangedAt  = local_last_changed_at;
+    }
+}
