@@ -14,6 +14,12 @@ authorization master ( instance, global )
   delete;
   field ( numbering : managed, readonly ) TravelUUID;
   association _Booking { create ( authorization : update ); }
+
+  action ( authorization : update ) acceptTravel result [1] $self;
+  action ( authorization : update ) rejectTravel result [1] $self;
+  action ( authorization : update ) deductDiscount parameter za_kp_deduct_discount result [1] $self;
+  internal action recalctotalprice;
+
   mapping for /dmo/a_travel_d
     {
       TravelUUID         = travel_uuid;
