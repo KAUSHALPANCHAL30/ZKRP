@@ -23,6 +23,14 @@ CLASS lhc_ZKP_TRAVEL_D DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS rejecttravel FOR MODIFY
       IMPORTING keys FOR ACTION zkp_travel_d~rejecttravel RESULT result.
+    METHODS calctotprice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zkp_travel_d~calctotprice.
+
+    METHODS setstatusopen FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zkp_travel_d~setstatusopen.
+
+    METHODS settravelid FOR DETERMINE ON SAVE
+      IMPORTING keys FOR zkp_travel_d~settravelid.
 
 ENDCLASS.
 
@@ -344,6 +352,60 @@ CLASS lhc_ZKP_TRAVEL_D IMPLEMENTATION.
 
     result = VALUE #( FOR travel IN lt_travels ( %tky   = travel-%tky
                                                  %param = travel ) ).
+  ENDMETHOD.
+
+  METHOD calcTotPrice.
+
+    MODIFY ENTITIES OF zkp_travel_d
+    IN LOCAL MODE
+    ENTITY zkp_travel_d
+    EXECUTE recalctotalprice
+    FROM CORRESPONDING #( keys ).
+
+
+  ENDMETHOD.
+
+  METHOD setStatusOpen.
+    READ ENTITIES OF zkp_travel_d IN LOCAL MODE
+    ENTITY zkp_travel_d
+    FIELDS ( OverallStatus )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    DELETE lt_travel WHERE OverallStatus IS NOT INITIAL.
+
+    CHECK lt_travel IS NOT INITIAL.
+
+    MODIFY ENTITIES OF Zkp_Travel_D IN LOCAL MODE
+    ENTITY zkp_travel_d
+    UPDATE FIELDS (  OverallStatus )
+    WITH VALUE #( FOR ls_travel IN lt_travel ( %tky = ls_travel-%tky
+                                               OverallStatus = 'O' ) ).
+  ENDMETHOD.
+
+  METHOD setTravelId.
+    READ ENTITIES OF zkp_travel_d IN LOCAL MODE
+    ENTITY zkp_travel_d
+    FIELDS ( TravelID )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    DELETE lt_travel WHERE travelid IS NOT INITIAL.
+
+    CHECK lt_travel IS NOT INITIAL.
+
+    SELECT FROM /dmo/a_travel_d
+    FIELDS MAX( travel_id )
+    INTO @DATA(lv_max_travelid).
+
+    MODIFY ENTITIES OF Zkp_Travel_D IN LOCAL MODE
+    ENTITY zkp_travel_d
+    UPDATE FIELDS (  TravelID )
+    WITH VALUE #( FOR ls_travel IN lt_travel INDEX INTO lv_index ( %tky = ls_travel-%tky
+                                               TravelID = lv_max_travelid + lv_index ) ).
+
+
+
   ENDMETHOD.
 
 ENDCLASS.

@@ -13,12 +13,19 @@ authorization master ( instance, global )
   update ( precheck );
   delete;
   field ( numbering : managed, readonly ) TravelUUID;
+  field (readonly ) TravelID;
+  field (readonly ) OverallStatus;
   association _Booking { create ( authorization : update ); }
 
   action ( authorization : update ) acceptTravel result [1] $self;
   action ( authorization : update ) rejectTravel result [1] $self;
   action ( authorization : update ) deductDiscount parameter za_kp_deduct_discount result [1] $self;
+
   internal action recalctotalprice;
+
+  determination setTravelId on save { create;}
+  determination setStatusOpen on modify { create;}
+  determination calcTotPrice on modify { create; field BookingFee, CurrencyCode; }
 
   mapping for /dmo/a_travel_d
     {
