@@ -15,7 +15,10 @@ authorization master ( instance, global )
   field ( numbering : managed, readonly ) TravelUUID;
   field (readonly ) TravelID;
   field (readonly ) OverallStatus;
+
   association _Booking { create ( authorization : update ); }
+
+
 
   action ( authorization : update ) acceptTravel result [1] $self;
   action ( authorization : update ) rejectTravel result [1] $self;
@@ -26,6 +29,11 @@ authorization master ( instance, global )
   determination setTravelId on save { create;}
   determination setStatusOpen on modify { create;}
   determination calcTotPrice on modify { create; field BookingFee, CurrencyCode; }
+
+  side effects { field BookingFee affects field TotalPrice; }
+
+  field ( mandatory ) CustomerID;
+  validation validateCustomer on save { create; field CustomerID; }
 
   mapping for /dmo/a_travel_d
     {
@@ -48,7 +56,8 @@ authorization master ( instance, global )
     }
 }
 
-define behavior for ZKP_BOOKING_D //alias <alias_name>
+define behavior for ZKP_BOOKING_D //alias <alias_name
+implementation in class zbp_booking_kp_d unique
 persistent table /dmo/a_booking_d
 lock dependent by _Travel
 authorization dependent by _Travel
@@ -60,6 +69,9 @@ authorization dependent by _Travel
   field ( readonly ) TravelUUID;
   association _Travel;
   association _BookingSupplement { create ( authorization : update ); }
+
+  field ( mandatory ) CustomerID;
+  validation validateCustomer on save { create; field CustomerID; }
   mapping for /dmo/a_booking_d
     {
       BookingUUID        = booking_uuid;
